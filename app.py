@@ -13,6 +13,10 @@ class IssuesHandler(BaseHandler):
 class AddIssueHandler(BaseHandler):
     def post(self):
         data = json.loads(self.get("issue"))
+
+        pictures = [db.Blob(x) for x in self.get("pictures")]
+        data['pictures'] = pictures
+
         issue = Issue(**data)
 
 
