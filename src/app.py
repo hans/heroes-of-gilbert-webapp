@@ -89,7 +89,7 @@ def ndb_model_to_dict(model):
         elif isinstance(value, ndb.GeoPt):
             output[key] = {'lat': value.lat, 'lon': value.lon}
         elif isinstance(value, ndb.Key):
-            output[key] = ndb_model_to_dict(value.get())
+            output[key] = value.id()
         elif isinstance(value, ndb.BlobKeyProperty):
             output[key] = value.id()
         else:
