@@ -106,5 +106,5 @@ def blobkey_to_url(blobkey):
 app = WSGIApplication([
     (r'/issues', IssuesHandler),
     (r'/issues/add', AddIssueHandler),
-    (r'/blobs/(\w+)', ViewBlobHandler)
+    (r'/blobs/([\w-_]+)', ViewBlobHandler)
 ], debug=config.DEV)
