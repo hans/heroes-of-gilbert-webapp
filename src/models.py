@@ -7,14 +7,9 @@ class User(ndb.Model):
     password = ndb.StringProperty()
 
 
-class Location(ndb.Model):
-    latitude = ndb.FloatProperty(required=True)
-    longitude = ndb.FloatProperty(required=True)
-
-
 class Issue(ndb.Model):
     reporter = ndb.KeyProperty(kind=User, required=True)
-    location = ndb.StructuredProperty(Location)
+    location = ndb.GeoPtProperty()
 
     title = ndb.StringProperty(required=True)
     time = ndb.DateTimeProperty(required=True)
