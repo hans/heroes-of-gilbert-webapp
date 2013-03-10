@@ -18,6 +18,7 @@ class AddIssueHandler(BaseHandler):
         data['pictures'] = pictures
 
         issue = Issue(**data)
+        issue.put()
 
 
 app = WSGIApplication([
