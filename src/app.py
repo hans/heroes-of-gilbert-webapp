@@ -1,9 +1,11 @@
 import datetime
 import time
+import urllib
 
 import dateutil.parser
-from google.appengine.api import files
-from google.appengine.ext import ndb
+from google.appengine.api import datastore_types, files
+from google.appengine.ext import blobstore, ndb
+from google.appengine.ext.webapp import blobstore_handlers
 from webapp2 import WSGIApplication
 
 from models import Issue, User
@@ -57,6 +59,13 @@ class AddIssueHandler(BaseHandler):
         issue.put()
 
 
+class ViewBlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, resource):
+        resource = str(urllib.unquote(resource))
+        blob_info = blobstore.BlobInfo.get(resource)
+        self.send_blob(blob_info)
+
+
 SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
 
 def ndb_model_to_dict(model):
@@ -64,6 +73,11 @@ def ndb_model_to_dict(model):
 
     for key, prop in model._properties.iteritems():
         value = getattr(model, key)
+
+        # Convert BlobKey list to string list
+        if ( isinstance(value, list) and len(value) > 0
+             and isinstance(value[0], datastore_types.BlobKey) ):
+            value = map(blobkey_to_url, value)
 
         if value is None or isinstance(value, SIMPLE_TYPES):
             output[key] = value
@@ -76,13 +90,21 @@ def ndb_model_to_dict(model):
             output[key] = {'lat': value.lat, 'lon': value.lon}
         elif isinstance(value, ndb.Key):
             output[key] = ndb_model_to_dict(value.get())
+        elif isinstance(value, ndb.BlobKeyProperty):
+            output[key] = value.id()
         else:
             raise ValueError('cannot encode ' + repr(prop))
 
     return output
 
 
+
+def blobkey_to_url(blobkey):
+    return config.SITE_URL + 'blobs/' + str(blobkey)
+
+
 app = WSGIApplication([
-    ('/issues', IssuesHandler),
-    ('/issues/add', AddIssueHandler)
+    (r'/issues', IssuesHandler),
+    (r'/issues/add', AddIssueHandler),
+    (r'/blobs/(\w+)', ViewBlobHandler)
 ], debug=config.DEV)
