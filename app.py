@@ -8,7 +8,11 @@ import config
 class IssuesHandler(BaseHandler):
     def get(self):
         issues = Issue.query().order(-Issue.time).fetch(40)
-        self.json_out(issues)
+        self.json_out([issues.to_dict() for issue in issues])
+
+
+
+
 
 app = WSGIApplication([
     ('/issues', IssuesHandler),
