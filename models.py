@@ -17,7 +17,7 @@ class Issue(ndb.Model):
     location = ndb.StructuredProperty(Location)
 
     title = ndb.StringProperty(required=True)
-    time = ndb.TimeProperty(required=True)
+    time = ndb.DateTimeProperty(required=True)
     description = ndb.TextProperty()
     urgency = ndb.IntegerProperty()
     pictures = ndb.BlobProperty(repeated=True)
