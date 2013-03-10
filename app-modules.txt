@@ -1,0 +1,4 @@
+# Files and directories in the Python site-packages directory that need to be
+# symlinked into the src directory for deployment
+dateutil
+six.py
