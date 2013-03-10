@@ -1,2 +1,4 @@
 distribute==0.6.28
+python-dateutil==2.1
+six==1.2.0
 wsgiref==0.1.2
