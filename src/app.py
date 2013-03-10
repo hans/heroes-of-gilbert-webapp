@@ -2,6 +2,7 @@ import datetime
 import time
 
 import dateutil.parser
+from google.appengine.api import files
 from google.appengine.ext import ndb
 from webapp2 import WSGIApplication
 
@@ -32,9 +33,19 @@ class AddIssueHandler(BaseHandler):
     def post(self):
         user = User.get_or_insert(self.request.get("user"))
 
-        pictures = self.request.get("pictures")
-        if pictures == "":
-            pictures = []
+        pictures = []
+
+        picture_input = self.request.POST.getall("pictures[]")
+        picture_input = [] if picture_input == "" else picture_input
+
+        for picture in picture_input:
+            filename = files.blobstore.create(mime_type=picture.type)
+
+            with files.open(filename, 'a') as f:
+                f.write(picture.value)
+            files.finalize(filename)
+
+            pictures.append(files.blobstore.get_blob_key(filename))
 
         issue = Issue(reporter=user.key,
                       title=self.request.get("title"),

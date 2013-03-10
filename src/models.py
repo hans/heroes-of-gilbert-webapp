@@ -15,7 +15,7 @@ class Issue(ndb.Model):
     time = ndb.DateTimeProperty(required=True)
     description = ndb.TextProperty()
     urgency = ndb.IntegerProperty()
-    pictures = ndb.BlobProperty(repeated=True)
+    pictures = ndb.BlobKeyProperty(repeated=True)
 
 
 class Comment(ndb.Model):
