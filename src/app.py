@@ -53,7 +53,7 @@ class AddIssueHandler(BaseHandler):
                       title=self.request.get("title"),
                       time=dateutil.parser.parse(self.request.get("time")),
                       description=self.request.get("description"),
-                      urgency=self.request.get("urgency", 0),
+                      urgency=int(self.request.get("urgency", 0)),
                       pictures=pictures)
 
         issue.put()
