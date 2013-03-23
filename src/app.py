@@ -6,6 +6,7 @@ import dateutil.parser
 from google.appengine.api import datastore_types, files
 from google.appengine.ext import blobstore, ndb
 from google.appengine.ext.webapp import blobstore_handlers
+import pytz
 from webapp2 import WSGIApplication
 
 from models import Issue, User
@@ -49,9 +50,12 @@ class AddIssueHandler(BaseHandler):
 
             pictures.append(files.blobstore.get_blob_key(filename))
 
+        date = dateutil.parser.parse(self.request.get("time"))
+        date = date.astimezone(pytz.utc).replace(tzinfo=None)
+
         issue = Issue(reporter=user.key,
                       title=self.request.get("title"),
-                      time=dateutil.parser.parse(self.request.get("time")),
+                      time=date,
                       description=self.request.get("description"),
                       urgency=int(self.request.get("urgency", 0)),
                       pictures=pictures)
