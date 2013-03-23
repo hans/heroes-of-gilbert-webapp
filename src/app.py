@@ -38,7 +38,7 @@ class AddIssueHandler(BaseHandler):
         pictures = []
 
         picture_input = self.request.POST.getall("pictures[]")
-        picture_input = [] if picture_input == "" else picture_input
+        picture_input = [] if picture_input == "" else filter(None, picture_input)
 
         for picture in picture_input:
             filename = files.blobstore.create(mime_type=picture.type)
