@@ -75,7 +75,7 @@ class ViewBlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
 SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
 
 def ndb_model_to_dict(model):
-    output = {'key': model.key.id()}
+    output = {'key': str(model.key.id())}
 
     for key, prop in model._properties.iteritems():
         value = getattr(model, key)
