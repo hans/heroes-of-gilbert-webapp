@@ -9,7 +9,7 @@ from google.appengine.ext.webapp import blobstore_handlers
 import pytz
 from webapp2 import WSGIApplication
 
-from models import Issue, User
+from models import Comment, Issue, User
 from base_handler import BaseHandler
 import config
 
@@ -18,6 +18,23 @@ class IssuesHandler(BaseHandler):
     def get(self):
         issues = Issue.query().order(-Issue.time).fetch(40)
         self.json_out([ndb_model_to_dict(issue) for issue in issues])
+
+
+class IssueHandler(BaseHandler):
+    def get(self, id):
+        issue = Issue.get_by_id(long(id))
+        if issue is None:
+            self.json_out(None)
+            return
+
+        issue_dict = ndb_model_to_dict(issue)
+
+        comments = Comment.query(Comment.issue == issue.key)
+        issue_dict['comments'] = [ndb_model_to_dict(comment)
+                                  for comment in comments]
+
+        self.json_out(issue_dict)
+
 
 class AddIssueHandler(BaseHandler):
     def get(self):
@@ -111,6 +128,7 @@ def blobkey_to_url(blobkey):
 
 app = WSGIApplication([
     (r'/issues', IssuesHandler),
+    (r'/issues/([\d]+)', IssueHandler),
     (r'/issues/add', AddIssueHandler),
     (r'/blobs/([\w\-_]+)', ViewBlobHandler)
 ], debug=config.DEV)
