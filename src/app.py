@@ -29,6 +29,9 @@ class IssueHandler(BaseHandler):
 
         issue_dict = ndb_model_to_dict(issue)
 
+        reporter = User.get_by_id(issue.reporter.id())
+        issue_dict['reporter'] = ndb_model_to_dict(reporter)
+
         comments = Comment.query(Comment.issue == issue.key)
         issue_dict['comments'] = [ndb_model_to_dict(comment)
                                   for comment in comments]
