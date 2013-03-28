@@ -22,5 +22,5 @@ class Comment(ndb.Model):
     issue = ndb.KeyProperty(kind=Issue)
     author = ndb.KeyProperty(kind=User)
 
-    time = ndb.TimeProperty()
+    time = ndb.DateTimeProperty()
     text = ndb.TextProperty()
