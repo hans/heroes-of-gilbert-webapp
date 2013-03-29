@@ -1,23 +1,58 @@
 import datetime
+import os
 import time
 import urllib
 
 import dateutil.parser
-from google.appengine.api import datastore_types, files
-from google.appengine.ext import blobstore, ndb
-from google.appengine.ext.webapp import blobstore_handlers
+from flask import Flask, request, jsonify
+from flask.ext.sqlalchemy import SQLAlchemy
 import pytz
-from webapp2 import WSGIApplication
 
-from models import Comment, Issue, User
 from base_handler import BaseHandler
 import config
 
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URL'] = os.environ['DATABASE_URL']
+db = SQLAlchemy(app)
 
-class IssuesHandler(BaseHandler):
-    def get(self):
-        issues = Issue.query().order(-Issue.time).fetch(40)
-        self.json_out([ndb_model_to_dict(issue) for issue in issues])
+
+class User(db.Model):
+    __tablename__ = 'user'
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(500))
+    username = db.Column(db.String(100))
+    password = db.Column(db.String(256))
+
+    def __init__(self, email, username, password):
+        self.email = email
+        self.username = username
+        self.password = password
+
+
+class Issue(db.Model):
+    __tablename__ = 'issue'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    reporter = db.relationship('User')
+
+    location_lat = db.Column(db.Float)
+    location_lon = db.Column(db.Float)
+
+    title = db.Column(db.String(200), required=True)
+    time = db.Column(db.DateTime, required=True)
+    description = db.Column(db.String(1000))
+    urgency = db.Column(db.Integer, required=True)
+    # pictures =
+
+
+# @app.route('/issues')
+# def get_issues():
+#     issues = Issue.query().order(-Issue.time).fetch(40)
+#     return jsonify([ndb_model_to_dict(issue) for issue in issues])
+
 
 
 class IssueHandler(BaseHandler):
@@ -127,11 +162,3 @@ def ndb_model_to_dict(model):
 
 def blobkey_to_url(blobkey):
     return config.SITE_URL + 'blobs/' + str(blobkey)
-
-
-app = WSGIApplication([
-    (r'/issues', IssuesHandler),
-    (r'/issues/([\d]+)', IssueHandler),
-    (r'/issues/add', AddIssueHandler),
-    (r'/blobs/([\w\-_]+)', ViewBlobHandler)
-], debug=config.DEV)

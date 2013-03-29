@@ -1,13 +1,6 @@
-from google.appengine.ext import ndb
+from app import db
 
-
-class User(ndb.Model):
-    email = ndb.StringProperty()
-    username = ndb.StringProperty()
-    password = ndb.StringProperty()
-
-
-class Issue(ndb.Model):
+class Issue(db.Model):
     reporter = ndb.KeyProperty(kind=User, required=True)
     location = ndb.GeoPtProperty()
 

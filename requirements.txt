@@ -1,5 +1,12 @@
+Flask==0.9
+Flask-SQLAlchemy==0.16
+Jinja2==2.6
+SQLAlchemy==0.8.0
+Werkzeug==0.8.3
 distribute==0.6.28
+psycopg2==2.4.6
 python-dateutil==2.1
 pytz==2013b
 six==1.2.0
 wsgiref==0.1.2
+boto==2.8.0
