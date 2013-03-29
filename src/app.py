@@ -30,6 +30,17 @@ class User(db.Model):
         self.password = password
 
 
+class Picture(db.Model):
+    __tablename__ = 'picture'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
+    issue = db.relationship('Issue')
+
+    s3_name = db.Column(db.String(1024))
+
+
 class Issue(db.Model):
     __tablename__ = 'issue'
 
@@ -45,7 +56,6 @@ class Issue(db.Model):
     time = db.Column(db.DateTime, required=True)
     description = db.Column(db.String(1000))
     urgency = db.Column(db.Integer, required=True)
-    # pictures =
 
 
 # @app.route('/issues')
