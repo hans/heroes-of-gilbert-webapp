@@ -75,11 +75,31 @@ class Issue(db.Model):
     description = db.Column(db.String(1000))
     urgency = db.Column(db.Integer, nullable=False)
 
+    @property
+    def pictures(self):
+        return db.session.query(Picture).filter(Picture.issue==self).all()
+
+    @property
+    def serialize(self):
+        picture_urls = [p.url for p in self.pictures]
+
+        ret = {
+            'key': self.id,
+            'reporter': self.reporter_id,
+            'pictures': picture_urls,
+            'title': self.title,
+            'location_lat': self.location_lat,
+            'time': long(self.time.strftime('%s')),
+            'urgency': int(self.urgency)
+        }
+
+        return ret
+
 
 @app.route('/issues')
 def get_issues():
     issues = db.session.query(Issue).order_by(Issue.time).limit(40).all()
-    return jsonify(issues)
+    return jsonify({'issues': [i.serialize for i in issues]})
 
 
 @app.route('/issues/add', methods=['GET', 'POST'])
@@ -123,79 +143,80 @@ def add_issue():
         <textarea name="description"></textarea>
         <input type="submit" value="Submit" />
         </form>
-        """)
-
-    def post(self):
-        user = User.get_or_insert(self.request.get("user"))
-
-        pictures = []
-        picture_input = self.request.POST.getall("pictures[]")
-        picture_input = [] if picture_input == "" else picture_input
-
-        for picture in picture_input:
-            if not hasattr(picture, 'file'):
-                continue
-
-            filename = files.blobstore.create(mime_type=picture.type)
-
-            with files.open(filename, 'a') as f:
-                f.write(picture.value)
-            files.finalize(filename)
-
-            pictures.append(files.blobstore.get_blob_key(filename))
-
-        date = dateutil.parser.parse(self.request.get("time"))
-        date = date.astimezone(pytz.utc).replace(tzinfo=None)
-
-        issue = Issue(reporter=user.key,
-                      title=self.request.get("title"),
-                      time=date,
-                      description=self.request.get("description"),
-                      urgency=int(self.request.get("urgency", 0)),
-                      pictures=pictures)
-
-        issue.put()
+        """
 
 
-class ViewBlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
-    def get(self, resource):
-        resource = str(urllib.unquote(resource))
-        blob_info = blobstore.BlobInfo.get(resource)
-        self.send_blob(blob_info)
+# class IssueHandler(BaseHandler):
+#     def get(self, id):
+#         issue = Issue.get_by_id(long(id))
+#         if issue is None:
+#             self.json_out(None)
+#             return
+
+#         issue_dict = ndb_model_to_dict(issue)
+
+#         reporter = User.get_by_id(issue.reporter.id())
+#         issue_dict['reporter'] = ndb_model_to_dict(reporter)
+
+#         comments = Comment.query(Comment.issue == issue.key)
+#         issue_dict['comments'] = [ndb_model_to_dict(comment)
+#                                   for comment in comments]
+
+#         self.json_out(issue_dict)
 
 
-SIMPLE_TYPES = (int, long, float, bool, dict, basestring, list)
+# class AddIssueHandler(BaseHandler):
+#     def get(self):
+#         self.out("""
+#         <form method="post" enctype="multipart/form-data">
+#         <input type="hidden" name="user" value="0" />
+#         <input type="text" name="title" placeholder="Title" />
+#         <input type="datetime" name="time" placeholder="Time" />
 
-def ndb_model_to_dict(model):
-    output = {'key': str(model.key.id())}
+#         <input type="file" name="pictures[]" multiple />
+#         <textarea name="description"></textarea>
+#         <input type="submit" value="Submit" />
+#         </form>
+#         """)
 
-    for key, prop in model._properties.iteritems():
-        value = getattr(model, key)
+#     def post(self):
+#         user = User.get_or_insert(self.request.get("user"))
 
-        # Convert BlobKey list to string list
-        if ( isinstance(value, list) and len(value) > 0
-             and isinstance(value[0], datastore_types.BlobKey) ):
-            value = map(blobkey_to_url, value)
+#         pictures = []
+#         picture_input = self.request.POST.getall("pictures[]")
+#         picture_input = [] if picture_input == "" else picture_input
 
-        if value is None or isinstance(value, SIMPLE_TYPES):
-            output[key] = value
-        elif isinstance(value, datetime.date):
-            # Convert date/datetime to ms-since-epoch ("new Date()").
-            ms = time.mktime(value.utctimetuple())
-            ms += getattr(value, 'microseconds', 0) / 1000
-            output[key] = int(ms)
-        elif isinstance(value, ndb.GeoPt):
-            output[key] = {'lat': value.lat, 'lon': value.lon}
-        elif isinstance(value, ndb.Key):
-            output[key] = value.id()
-        elif isinstance(value, ndb.BlobKeyProperty):
-            output[key] = value.id()
-        else:
-            raise ValueError('cannot encode ' + repr(prop))
+#         for picture in picture_input:
+#             if not hasattr(picture, 'file'):
+#                 continue
 
-    return output
+#             filename = files.blobstore.create(mime_type=picture.type)
+
+#             with files.open(filename, 'a') as f:
+#                 f.write(picture.value)
+#             files.finalize(filename)
+
+#             pictures.append(files.blobstore.get_blob_key(filename))
+
+#         date = dateutil.parser.parse(self.request.get("time"))
+#         date = date.astimezone(pytz.utc).replace(tzinfo=None)
+
+#         issue = Issue(reporter=user.key,
+#                       title=self.request.get("title"),
+#                       time=date,
+#                       description=self.request.get("description"),
+#                       urgency=int(self.request.get("urgency", 0)),
+#                       pictures=pictures)
+
+#         issue.put()
 
 
+# class ViewBlobHandler(blobstore_handlers.BlobstoreDownloadHandler):
+#     def get(self, resource):
+#         resource = str(urllib.unquote(resource))
+#         blob_info = blobstore.BlobInfo.get(resource)
+#         self.send_blob(blob_info)
 
-def blobkey_to_url(blobkey):
-    return config.SITE_URL + 'blobs/' + str(blobkey)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
