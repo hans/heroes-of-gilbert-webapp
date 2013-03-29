@@ -3,17 +3,23 @@ import os
 import time
 import urllib
 
+import boto
+import boto.s3
+from boto.s3.key import Key
 import dateutil.parser
 from flask import Flask, request, jsonify
 from flask.ext.sqlalchemy import SQLAlchemy
 import pytz
 
-from base_handler import BaseHandler
 import config
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URL'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
+
+boto_conn = boto.connect_s3(os.environ['AWS_ACCESS_KEY_ID'],
+                            os.environ['AWS_SECRET_ACCESS_KEY'])
+boto_bucket = boto_conn.get_bucket(os.environ['S3_BUCKET_NAME'])
 
 
 class User(db.Model):
