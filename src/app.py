@@ -62,6 +62,21 @@ class Picture(db.Model):
                                                       self.s3_name)
 
 
+class Comment(db.Model):
+    __tablename__ = 'comment'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
+    issue = db.relationship('Issue')
+
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    author = db.relationship('User')
+
+    time = db.Column(db.DateTime, nullable=False)
+    text = db.Column(db.String(1000), nullable=False)
+
+
 class Issue(db.Model):
     __tablename__ = 'issue'
 
