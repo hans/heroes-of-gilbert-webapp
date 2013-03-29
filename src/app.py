@@ -70,35 +70,44 @@ class Issue(db.Model):
     urgency = db.Column(db.Integer, nullable=False)
 
 
-# @app.route('/issues')
-# def get_issues():
-#     issues = Issue.query().order(-Issue.time).fetch(40)
-#     return jsonify([ndb_model_to_dict(issue) for issue in issues])
+@app.route('/issues')
+def get_issues():
+    issues = db.session.query(Issue).order_by(Issue.time).limit(40).all()
+    return jsonify(issues)
 
 
+@app.route('/issues/add', methods=['GET', 'POST'])
+def add_issue():
+    if request.method == 'POST':
+        u = User.get_or_create(db.session, int(request.form['user']))
 
-class IssueHandler(BaseHandler):
-    def get(self, id):
-        issue = Issue.get_by_id(long(id))
-        if issue is None:
-            self.json_out(None)
-            return
+        date = dateutil.parser.parse(request.form['time'])
+        date = date.astimezone(pytz.utc).replace(tzinfo=None)
 
-        issue_dict = ndb_model_to_dict(issue)
+        issue = Issue(reporter=u,
+                      title=request.form['title'],
+                      time=date,
+                      description=request.form['description'],
+                      urgency=int(request.form.get('urgency', 0)))
 
-        reporter = User.get_by_id(issue.reporter.id())
-        issue_dict['reporter'] = ndb_model_to_dict(reporter)
+        db.session.add(issue)
+        db.session.commit()
 
-        comments = Comment.query(Comment.issue == issue.key)
-        issue_dict['comments'] = [ndb_model_to_dict(comment)
-                                  for comment in comments]
+        pictures = request.files.getlist("pictures[]")
+        # TODO: check extension
 
-        self.json_out(issue_dict)
+        for picture in pictures:
+            k = Key(boto_bucket)
+            k.set_contents_from_file(picture.stream)
+            k.make_public()
 
+            p = Picture(issue=issue, s3_name=k.name)
+            db.session.add(p)
+        db.session.commit()
 
-class AddIssueHandler(BaseHandler):
-    def get(self):
-        self.out("""
+        return ""
+    else:
+        return """
         <form method="post" enctype="multipart/form-data">
         <input type="hidden" name="user" value="0" />
         <input type="text" name="title" placeholder="Title" />
