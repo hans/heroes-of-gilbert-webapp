@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 
 import boto
@@ -196,6 +197,29 @@ def add_issue():
 
         <input type="file" name="pictures[]" multiple />
         <textarea name="description"></textarea>
+        <input type="submit" value="Submit" />
+        </form>
+        """
+
+
+@app.route('/issues/<int:issue_id>/comment/add', methods=['GET', 'POST'])
+def add_comment(issue_id):
+    if request.method == 'POST':
+        u = User.get_or_create(db.session, int(request.form['author']))
+
+        c = Comment(issue_id=issue_id,
+                    author=u,
+                    time=datetime.now(),
+                    text=request.form['text'])
+        db.session.add(c)
+        db.session.commit()
+
+        return ""
+    else:
+        return """
+        <form method="post">
+        <input type="hidden" name="author" value="0" />
+        <textarea name="text"></textarea>
         <input type="submit" value="Submit" />
         </form>
         """
