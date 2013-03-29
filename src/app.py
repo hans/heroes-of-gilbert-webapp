@@ -86,12 +86,16 @@ class Issue(db.Model):
     def serialize(self):
         picture_urls = [p.url for p in self.pictures]
 
+        location = None
+        if self.location_lat and self.location_lon:
+            location = {'lat': self.location_lat, 'lon': self.location_lon}
+
         ret = {
             'key': self.id,
             'reporter': self.reporter_id,
             'pictures': picture_urls,
             'title': self.title,
-            'location_lat': self.location_lat,
+            'location': location,
             'time': long(self.time.strftime('%s')),
             'urgency': int(self.urgency)
         }
