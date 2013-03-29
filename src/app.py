@@ -76,6 +76,16 @@ class Comment(db.Model):
     time = db.Column(db.DateTime, nullable=False)
     text = db.Column(db.String(1000), nullable=False)
 
+    @property
+    def serialize(self):
+        return {
+            'key': self.id,
+            'time': long(self.time.strftime('%s')),
+            'issue': self.issue_id,
+            'author': self.author.serialize,
+            'text': self.text
+        }
+
 
 class Issue(db.Model):
     __tablename__ = 'issue'
@@ -96,6 +106,10 @@ class Issue(db.Model):
     @property
     def pictures(self):
         return db.session.query(Picture).filter(Picture.issue==self).all()
+
+    @property
+    def comments(self):
+        return db.session.query(Comment).filter(Comment.issue==self).all()
 
     @property
     def serialize(self):
@@ -123,6 +137,8 @@ class Issue(db.Model):
 
         u = db.session.query(User).filter(User.id==s['reporter']).first()
         s['reporter'] = u.serialize if u else None
+
+        s['comments'] = [c.serialize for c in self.comments]
 
         return s
 
