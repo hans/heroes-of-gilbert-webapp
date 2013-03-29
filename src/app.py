@@ -18,9 +18,10 @@ app.debug = True
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
 
+S3_BUCKET_NAME = os.environ['S3_BUCKET_NAME']
 boto_conn = boto.connect_s3(os.environ['AWS_ACCESS_KEY_ID'],
                             os.environ['AWS_SECRET_ACCESS_KEY'])
-boto_bucket = boto_conn.get_bucket(os.environ['S3_BUCKET_NAME'])
+boto_bucket = boto_conn.get_bucket(S3_BUCKET_NAME)
 
 
 class User(db.Model):
@@ -51,6 +52,11 @@ class Picture(db.Model):
     issue = db.relationship('Issue')
 
     s3_name = db.Column(db.String(1024))
+
+    @property
+    def url(self):
+        return 'http://{}.s3.amazonaws.com/{}'.format(S3_BUCKET_NAME,
+                                                      self.s3_name)
 
 
 class Issue(db.Model):
