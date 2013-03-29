@@ -31,10 +31,15 @@ class User(db.Model):
     username = db.Column(db.String(100))
     password = db.Column(db.String(256))
 
-    def __init__(self, email, username, password):
-        self.email = email
-        self.username = username
-        self.password = password
+    @staticmethod
+    def get_or_create(session, id):
+        u = session.query(User).filter_by(id=id).first()
+        if u:
+            return u
+
+        u = User(id=id)
+        session.add(u)
+        return u
 
 
 class Picture(db.Model):
