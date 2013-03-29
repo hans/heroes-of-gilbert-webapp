@@ -14,7 +14,8 @@ import pytz
 import config
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URL'] = os.environ['DATABASE_URL']
+app.debug = True
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 db = SQLAlchemy(app)
 
 boto_conn = boto.connect_s3(os.environ['AWS_ACCESS_KEY_ID'],
@@ -58,10 +59,10 @@ class Issue(db.Model):
     location_lat = db.Column(db.Float)
     location_lon = db.Column(db.Float)
 
-    title = db.Column(db.String(200), required=True)
-    time = db.Column(db.DateTime, required=True)
+    title = db.Column(db.String(200), nullable=False)
+    time = db.Column(db.DateTime, nullable=False)
     description = db.Column(db.String(1000))
-    urgency = db.Column(db.Integer, required=True)
+    urgency = db.Column(db.Integer, nullable=False)
 
 
 # @app.route('/issues')
