@@ -32,6 +32,13 @@ class User(db.Model):
     username = db.Column(db.String(100))
     password = db.Column(db.String(256))
 
+    @property
+    def serialize(self):
+        return {
+            'key': self.id,
+            'username': self.username
+        }
+
     @staticmethod
     def get_or_create(session, id):
         u = session.query(User).filter_by(id=id).first()
@@ -95,11 +102,28 @@ class Issue(db.Model):
 
         return ret
 
+    @property
+    def serialize_detailed(self):
+        s = self.serialize
+
+        u = db.session.query(User).filter(User.id==s['reporter']).first()
+        s['reporter'] = u.serialize if u else None
+
+        return s
+
 
 @app.route('/issues')
 def get_issues():
     issues = db.session.query(Issue).order_by(Issue.time).limit(40).all()
     return jsonify({'issues': [i.serialize for i in issues]})
+
+
+@app.route('/issues/<int:issue_id>')
+def get_issue(issue_id):
+    i = db.session.query(Issue).filter(Issue.id == issue_id).first()
+    if i:
+        return jsonify({'issue': i.serialize_detailed})
+    return jsonify({})
 
 
 @app.route('/issues/add', methods=['GET', 'POST'])
