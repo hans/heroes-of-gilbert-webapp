@@ -126,6 +126,7 @@ class Issue(db.Model):
             'reporter': self.reporter_id,
             'pictures': picture_urls,
             'title': self.title,
+            'description': self.description,
             'location': location,
             'time': long(self.time.strftime('%s')),
             'urgency': int(self.urgency),
