@@ -103,6 +103,7 @@ class Issue(db.Model):
     time = db.Column(db.DateTime, nullable=False)
     description = db.Column(db.String(1000))
     urgency = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.Integer, default=0)
 
     @property
     def pictures(self):
@@ -127,7 +128,8 @@ class Issue(db.Model):
             'title': self.title,
             'location': location,
             'time': long(self.time.strftime('%s')),
-            'urgency': int(self.urgency)
+            'urgency': int(self.urgency),
+            'status': int(self.status)
         }
 
         return ret
@@ -223,6 +225,23 @@ def add_comment(issue_id):
         <input type="submit" value="Submit" />
         </form>
         """
+
+
+@app.route('/issues/<int:issue_id>/status', methods=['POST'])
+def issue_status(issue_id):
+    if request.method == 'POST':
+        i = ( db.session.query(Issue)
+              .filter(Issue.id == issue_id)
+              .first() )
+
+        if i == None:
+            return "florp", 404
+
+        status = int(request.form['status'])
+        i.status = status
+
+        db.session.commit()
+        return ""
 
 
 if __name__ == '__main__':
