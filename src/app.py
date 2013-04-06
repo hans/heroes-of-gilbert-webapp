@@ -24,8 +24,13 @@ boto_bucket = boto_conn.get_bucket(S3_BUCKET_NAME)
 class User(db.Model):
     __tablename__ = 'user'
 
+    STATUS_NORMAL = 0
+    STATUS_ADMIN = 1
+    STATUS_SUPERADMIN = 2
+    STATUS_BANNED = 3
+
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.Integer, default=0)
+    status = db.Column(db.Integer, default=STATUS_NORMAL)
     email = db.Column(db.String(500))
     username = db.Column(db.String(100))
     password = db.Column(db.String(256))
@@ -37,6 +42,10 @@ class User(db.Model):
             'username': self.username,
             'status': self.status
         }
+
+    @property
+    def can_publish(self):
+        return self.status != User.STATUS_BANNED
 
     @staticmethod
     def get_or_create(session, id):
@@ -168,6 +177,9 @@ def add_issue():
     if request.method == 'POST':
         u = User.get_or_create(db.session, int(request.form['user']))
 
+        if not u.can_publish:
+            return "", 403
+
         date = dateutil.parser.parse(request.form['time'])
         date = date.astimezone(pytz.utc).replace(tzinfo=None)
 
@@ -211,6 +223,9 @@ def add_issue():
 def add_comment(issue_id):
     if request.method == 'POST':
         u = User.get_or_create(db.session, int(request.form['author']))
+
+        if not u.can_publish:
+            return "", 403
 
         c = Comment(issue_id=issue_id,
                     author=u,
