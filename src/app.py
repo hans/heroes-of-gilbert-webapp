@@ -45,7 +45,16 @@ class User(db.Model):
 
     @property
     def can_publish(self):
+        """Can the user publish issues and comments?"""
+
         return self.status != User.STATUS_BANNED
+
+    @property
+    def can_update(self):
+        """Can the user update the status / details of any public issue?"""
+
+        return ( self.status == User.STATUS_ADMIN
+                 or self.status == User.STATUS_SUPERADMIN )
 
     @staticmethod
     def get_or_create(session, id):
@@ -252,6 +261,11 @@ def add_comment(issue_id):
 @app.route('/issues/<int:issue_id>/status', methods=['POST'])
 def issue_status(issue_id):
     if request.method == 'POST':
+        u = User.get_or_create(db.session, int(request.form['user']))
+
+        if not u.can_update:
+            return "", 403
+
         i = ( db.session.query(Issue)
               .filter(Issue.id == issue_id)
               .first() )
