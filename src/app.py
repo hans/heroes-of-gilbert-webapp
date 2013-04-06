@@ -25,6 +25,7 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.Integer, default=0)
     email = db.Column(db.String(500))
     username = db.Column(db.String(100))
     password = db.Column(db.String(256))
@@ -33,7 +34,8 @@ class User(db.Model):
     def serialize(self):
         return {
             'key': self.id,
-            'username': self.username
+            'username': self.username,
+            'status': self.status
         }
 
     @staticmethod
