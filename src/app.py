@@ -29,7 +29,7 @@ class User(db.Model):
     STATUS_SUPERADMIN = 2
     STATUS_BANNED = 3
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(300), primary_key=True)
     status = db.Column(db.Integer, default=STATUS_NORMAL)
     email = db.Column(db.String(500))
     username = db.Column(db.String(100))
@@ -91,7 +91,7 @@ class Comment(db.Model):
     issue_id = db.Column(db.Integer, db.ForeignKey('issue.id'))
     issue = db.relationship('Issue')
 
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    author_id = db.Column(db.String(300), db.ForeignKey('user.id'))
     author = db.relationship('User')
 
     time = db.Column(db.DateTime, nullable=False)
@@ -113,7 +113,7 @@ class Issue(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    reporter_id = db.Column(db.String(300), db.ForeignKey('user.id'))
     reporter = db.relationship('User')
 
     location_lat = db.Column(db.Float)
