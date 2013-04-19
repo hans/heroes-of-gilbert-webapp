@@ -58,6 +58,7 @@ class User(db.Model):
 
     @staticmethod
     def get_or_create(session, id):
+        id = str(id)
         u = session.query(User).filter_by(id=id).first()
         if u:
             return u
