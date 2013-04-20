@@ -206,10 +206,6 @@ def add_issue():
         # TODO: check extension
 
         for picture in pictures:
-            # Some requests will have bogus params (just empty content)
-            if picture.content_length == 0:
-                continue
-
             k = Key(boto_bucket)
             k.set_contents_from_file(picture.stream)
             k.make_public()
